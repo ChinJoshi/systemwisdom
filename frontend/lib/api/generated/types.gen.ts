@@ -5,6 +5,24 @@ export type ClientOptions = {
 };
 
 /**
+ * CodebaseResponse
+ */
+export type CodebaseResponse = {
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Created At
+     */
+    created_at: string;
+};
+
+/**
  * MeResponse
  */
 export type MeResponse = {
@@ -29,3 +47,21 @@ export type GetMeResponses = {
 };
 
 export type GetMeResponse = GetMeResponses[keyof GetMeResponses];
+
+export type ListCodebasesData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/codebases';
+};
+
+export type ListCodebasesResponses = {
+    /**
+     * Response List Codebases
+     *
+     * Successful Response
+     */
+    200: Array<CodebaseResponse>;
+};
+
+export type ListCodebasesResponse = ListCodebasesResponses[keyof ListCodebasesResponses];

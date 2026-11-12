@@ -42,6 +42,7 @@ class Codebase(TimestampMixin, Base):
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
     # WorkOS user id (e.g. "user_01H..."); users live in WorkOS, so there's no local FK.
     user_id: Mapped[str] = mapped_column(String(255), index=True)
+    name: Mapped[str] = mapped_column(String(255))
     blob_uri: Mapped[str] = mapped_column(Text)
 
 
