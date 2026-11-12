@@ -1,21 +1,13 @@
 import Image from "next/image";
-import { withAuth } from "@workos-inc/authkit-nextjs";
-
-type MeResponse = { user_id: string };
+import { getMe } from "@/lib/api/generated";
+import { serverApiClient } from "@/lib/api/server";
 
 async function getMessage(): Promise<string> {
-    const { accessToken } = await withAuth();
-    if (!accessToken) return "Not signed in.";
-
-    // BACKEND_URL is injected by the frontend -> backend service binding in vercel.json.
-    const base = process.env.BACKEND_URL!.replace(/\/?$/, "/");
-    const res = await fetch(new URL("api/me", base), {
-        headers: { Authorization: `Bearer ${accessToken}` },
-    });
-    if (!res.ok) return `Backend returned ${res.status}.`;
-
-    const me: MeResponse = await res.json();
-    return `Backend says you are ${me.user_id}`;
+    const { data, response } = await getMe({ client: serverApiClient });
+    if (data) return `Backend says you are ${data.user_id}`;
+    if (response?.status === 401) return "Not signed in.";
+    // response is undefined when the request itself failed (e.g. network error).
+    return response ? `Backend returned ${response.status}.` : "Could not reach the backend.";
 }
 
 export default async function Home() {
