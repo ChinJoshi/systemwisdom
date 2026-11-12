@@ -1,40 +1,26 @@
-import { Suspense } from "react";
 import Image from "next/image";
-import { connection } from "next/server";
 import { withAuth } from "@workos-inc/authkit-nextjs";
 
 type MeResponse = { user_id: string };
 
-// Reads the session at request time, so it must render behind a <Suspense> boundary (cacheComponents).
-async function BackendMe() {
-    // withAuth() unseals the session with iron-session, which checks expiry via Date.now().
-    // headers() alone doesn't stop a runtime prerender, so defer to a real request first.
-    await connection();
+async function getMessage(): Promise<string> {
     const { accessToken } = await withAuth();
-
-    if (!accessToken) {
-        return <p className="text-sm text-zinc-500">Not signed in.</p>;
-    }
+    if (!accessToken) return "Not signed in.";
 
     // BACKEND_URL is injected by the frontend -> backend service binding in vercel.json.
     const base = process.env.BACKEND_URL!.replace(/\/?$/, "/");
     const res = await fetch(new URL("api/me", base), {
         headers: { Authorization: `Bearer ${accessToken}` },
     });
-
-    if (!res.ok) {
-        return <p className="text-sm text-red-600">Backend returned {res.status}.</p>;
-    }
+    if (!res.ok) return `Backend returned ${res.status}.`;
 
     const me: MeResponse = await res.json();
-    return (
-        <p className="text-sm text-zinc-600 dark:text-zinc-400">
-            Backend says you are <code className="font-mono">{me.user_id}</code>
-        </p>
-    );
+    return `Backend says you are ${me.user_id}`;
 }
 
-export default function Home() {
+export default async function Home() {
+    const message = await getMessage();
+
     return (
         <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
             <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
@@ -72,9 +58,7 @@ export default function Home() {
                         </a>{" "}
                         center.
                     </p>
-                    <Suspense fallback={<p className="text-sm text-zinc-500">Checking backend…</p>}>
-                        <BackendMe />
-                    </Suspense>
+                    <p className="text-sm text-zinc-600 dark:text-zinc-400">{message}</p>
                 </div>
                 <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
                     <a

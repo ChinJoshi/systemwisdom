@@ -1,11 +1,10 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, FastAPI
-
 from app.api_models import AuthenticatedUser, MeResponse
 from app.security import authenticated_user
+from fastapi import APIRouter, Depends, FastAPI
 
-app = FastAPI()
+app = FastAPI(docs_url="/api/docs", openapi_url="/api/openapi.json")
 
 api_router = APIRouter(prefix="/api")
 
