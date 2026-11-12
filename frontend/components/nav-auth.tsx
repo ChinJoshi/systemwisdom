@@ -12,7 +12,7 @@ export function NavAuth() {
   if (user) {
     return (
       <form action={signOutAction} className="flex items-center gap-3">
-        <span className="text-sm text-muted-foreground">{user.email}</span>
+        <span className="hidden text-sm text-muted-foreground sm:inline">{user.email}</span>
         <Button type="submit" variant="outline">
           Sign out
         </Button>
