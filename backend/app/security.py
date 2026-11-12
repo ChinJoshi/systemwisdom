@@ -1,5 +1,4 @@
 import logging
-import os
 from typing import Annotated
 
 import jwt
@@ -10,16 +9,14 @@ from pydantic import ValidationError
 from workos import WorkOSClient
 
 from app.api_models import AccessTokenJWT, AuthenticatedUser
+from app.config import settings
 
 logger = logging.getLogger(__name__)
 
 
-WORKOS_API_KEY = os.getenv("WORKOS_API_KEY")
-WORKOS_CLIENT_ID = os.getenv("WORKOS_CLIENT_ID")
-
 workos_client = WorkOSClient(
-    api_key=WORKOS_API_KEY,
-    client_id=WORKOS_CLIENT_ID,
+    api_key=settings.workos_api_key.get_secret_value(),
+    client_id=settings.workos_client_id,
 )
 
 
