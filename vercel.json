@@ -1,7 +1,15 @@
 {
     "services": {
         "frontend": {
-            "root": "frontend/"
+            "root": "frontend/",
+            "bindings": [
+                {
+                    "type": "service",
+                    "service": "backend",
+                    "format": "url",
+                    "env": "BACKEND_URL"
+                }
+            ]
         },
         "backend": {
             "root": "backend/",

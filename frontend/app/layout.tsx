@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono, Inter } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
+import { AuthKitProvider } from "@workos-inc/authkit-nextjs/components";
+import { NavAuth } from "@/components/nav-auth";
 
 const inter = Inter({subsets:['latin'],variable:'--font-sans'});
 
@@ -26,7 +28,14 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="en"
       className={cn("h-full", "antialiased", geistSans.variable, geistMono.variable, "font-sans", inter.variable)}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <AuthKitProvider>
+          <header className="flex justify-end p-4">
+            <NavAuth />
+          </header>
+          {children}
+        </AuthKitProvider>
+      </body>
     </html>
   );
 }
