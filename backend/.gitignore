@@ -3,3 +3,5 @@
 .vercel
 
 app/__pycache__
+
+*.pyc
