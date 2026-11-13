@@ -1,15 +1,19 @@
+import hashlib
+import hmac
 import logging
 from typing import Annotated
 
 import jwt
-from fastapi import Depends, HTTPException
+from app.api_models import AccessTokenJWT, AuthenticatedUser
+from app.config import settings
+from fastapi import Depends, HTTPException, Request
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jwt import PyJWKClient
 from pydantic import ValidationError
 from workos import WorkOSClient
 
-from app.api_models import AccessTokenJWT, AuthenticatedUser
-from app.config import settings
+SIGNATURE_HEADER = "X-Signature"
+
 
 logger = logging.getLogger(__name__)
 
@@ -54,3 +58,18 @@ def authenticated_user(
     except ValidationError as e:
         logger.warning("Access token object failed validation: %s", e)
         raise HTTPException(status_code=401, detail="Invalid access token")
+
+
+# Guards endpoints that are only called server-to-server (e.g. by the frontend's Vercel Blob upload
+# callback, which runs without a user session). The caller signs the raw request body with
+# HMAC-SHA256 using the shared HMAC_SECRET and sends the hex digest in the X-Signature header.
+async def verified_signature(request: Request) -> None:
+    signature = request.headers.get(SIGNATURE_HEADER, "")
+    expected = hmac.new(
+        settings.hmac_secret.get_secret_value().encode(),
+        await request.body(),
+        hashlib.sha256,
+    ).hexdigest()
+    if not hmac.compare_digest(signature, expected):
+        logger.warning("Rejected request with a missing or invalid HMAC signature")
+        raise HTTPException(status_code=401, detail="Invalid signature")

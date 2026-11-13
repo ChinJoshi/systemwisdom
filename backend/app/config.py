@@ -27,5 +27,9 @@ class Settings(BaseSettings):
     workos_api_key: SecretStr
     workos_client_id: str
 
+    # Shared secret that trusted server-side callers (the frontend's Vercel Blob upload callback)
+    # use to HMAC-sign requests to /api/internal/* endpoints.
+    hmac_secret: SecretStr
+
 
 settings = Settings()  # pyright: ignore[reportCallIssue]  # fields are populated from the environment

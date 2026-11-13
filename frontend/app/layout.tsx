@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { AuthKitProvider } from "@workos-inc/authkit-nextjs/components";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
+import { Toaster } from "@/components/ui/sonner";
 
 const inter = Inter({subsets:['latin'],variable:'--font-sans'});
 
@@ -34,6 +35,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           <SiteHeader />
           <main className="flex flex-1 flex-col">{children}</main>
           <SiteFooter />
+          <Toaster />
         </AuthKitProvider>
       </body>
     </html>

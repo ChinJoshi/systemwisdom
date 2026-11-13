@@ -23,6 +23,40 @@ export type CodebaseResponse = {
 };
 
 /**
+ * CreateCodebaseRequest
+ *
+ * Sent by the frontend's Vercel Blob upload callback once a codebase zip has been uploaded.
+ */
+export type CreateCodebaseRequest = {
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * User Id
+     */
+    user_id: string;
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Blob Uri
+     */
+    blob_uri: string;
+};
+
+/**
+ * HTTPValidationError
+ */
+export type HttpValidationError = {
+    /**
+     * Detail
+     */
+    detail?: Array<ValidationError>;
+};
+
+/**
  * MeResponse
  */
 export type MeResponse = {
@@ -30,6 +64,34 @@ export type MeResponse = {
      * User Id
      */
     user_id: string;
+};
+
+/**
+ * ValidationError
+ */
+export type ValidationError = {
+    /**
+     * Location
+     */
+    loc: Array<string | number>;
+    /**
+     * Message
+     */
+    msg: string;
+    /**
+     * Error Type
+     */
+    type: string;
+    /**
+     * Input
+     */
+    input?: unknown;
+    /**
+     * Context
+     */
+    ctx?: {
+        [key: string]: unknown;
+    };
 };
 
 export type GetMeData = {
@@ -65,3 +127,58 @@ export type ListCodebasesResponses = {
 };
 
 export type ListCodebasesResponse = ListCodebasesResponses[keyof ListCodebasesResponses];
+
+export type GetCodebaseData = {
+    body?: never;
+    path: {
+        /**
+         * Codebase Id
+         */
+        codebase_id: string;
+    };
+    query?: never;
+    url: '/api/codebases/{codebase_id}';
+};
+
+export type GetCodebaseErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetCodebaseError = GetCodebaseErrors[keyof GetCodebaseErrors];
+
+export type GetCodebaseResponses = {
+    /**
+     * Successful Response
+     */
+    200: CodebaseResponse;
+};
+
+export type GetCodebaseResponse = GetCodebaseResponses[keyof GetCodebaseResponses];
+
+export type CreateCodebaseData = {
+    body: CreateCodebaseRequest;
+    path?: never;
+    query?: never;
+    url: '/api/internal/codebases';
+};
+
+export type CreateCodebaseErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type CreateCodebaseError = CreateCodebaseErrors[keyof CreateCodebaseErrors];
+
+export type CreateCodebaseResponses = {
+    /**
+     * Successful Response
+     */
+    201: CodebaseResponse;
+};
+
+export type CreateCodebaseResponse = CreateCodebaseResponses[keyof CreateCodebaseResponses];

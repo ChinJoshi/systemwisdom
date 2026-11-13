@@ -2,6 +2,7 @@
     "services": {
         "frontend": {
             "root": "frontend/",
+            "devCommand": "pnpx smee-client --url https://smee.io/N7jUBl7FOcUpeB --target http://localhost:$PORT/codebases/upload & next dev --port $PORT",
             "bindings": [
                 {
                     "type": "service",
