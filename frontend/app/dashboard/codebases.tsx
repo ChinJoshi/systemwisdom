@@ -1,4 +1,5 @@
 import { cache, type ReactNode } from "react";
+import Link from "next/link";
 import { CircleAlertIcon, FolderGit2Icon } from "lucide-react";
 import { listCodebases, type CodebaseResponse } from "@/lib/api/generated";
 import { serverApiClient } from "@/lib/api/server";
@@ -122,19 +123,21 @@ export function CodebaseListSkeleton() {
 
 function CodebaseCard({ codebase }: { codebase: CodebaseResponse }) {
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <FolderGit2Icon className="size-4 text-muted-foreground" />
-          <span className="truncate">{codebase.name}</span>
-        </CardTitle>
-        <CardDescription>
-          Added{" "}
-          <time dateTime={codebase.created_at}>
-            {dateFormat.format(new Date(codebase.created_at))}
-          </time>
-        </CardDescription>
-      </CardHeader>
-    </Card>
+    <Link href={`/codebase/${codebase.id}`} className="group/codebase outline-none">
+      <Card className="h-full transition-colors group-hover/codebase:bg-muted/50 group-hover/codebase:ring-foreground/20 group-focus-visible/codebase:ring-2 group-focus-visible/codebase:ring-ring">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <FolderGit2Icon className="size-4 text-muted-foreground" />
+            <span className="truncate">{codebase.name}</span>
+          </CardTitle>
+          <CardDescription>
+            Added{" "}
+            <time dateTime={codebase.created_at}>
+              {dateFormat.format(new Date(codebase.created_at))}
+            </time>
+          </CardDescription>
+        </CardHeader>
+      </Card>
+    </Link>
   );
 }

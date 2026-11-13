@@ -55,3 +55,25 @@ class CreateCodebaseRequest(BaseModel):
         str, StringConstraints(strip_whitespace=True, min_length=1, max_length=255)
     ]
     blob_uri: Annotated[str, StringConstraints(min_length=1)]
+
+
+class ContributorResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    name: str
+    email: str
+
+
+class ConceptResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    name: str
+
+
+class AssessmentResponse(BaseModel):
+    id: uuid.UUID
+    active: bool
+    question_count: int
+    created_at: datetime

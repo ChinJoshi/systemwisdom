@@ -1,0 +1,259 @@
+import type { ReactNode } from "react";
+import Link from "next/link";
+import {
+  ArrowLeftIcon,
+  ClipboardListIcon,
+  LightbulbIcon,
+  UsersIcon,
+  type LucideIcon,
+} from "lucide-react";
+import type {
+  AssessmentResponse,
+  ConceptResponse,
+  ContributorResponse,
+} from "@/lib/api/generated";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+
+export const dateFormat = new Intl.DateTimeFormat("en-US", { dateStyle: "medium" });
+
+// Static frame of the codebase page, used by both page.tsx and loading.tsx so the fallback
+// and the real page line up exactly.
+export function CodebaseShell({
+  title,
+  description,
+  action,
+  children,
+}: {
+  title: ReactNode;
+  description: ReactNode;
+  action?: ReactNode;
+  children: ReactNode;
+}) {
+  return (
+    <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-4 py-10">
+      <div className="flex flex-col gap-4">
+        <Button
+          variant="ghost"
+          size="sm"
+          className="-ml-2.5 w-fit"
+          render={<Link href="/dashboard" />}
+          nativeButton={false}
+        >
+          <ArrowLeftIcon data-icon="inline-start" />
+          Codebases
+        </Button>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div className="flex min-w-0 flex-col gap-1">
+            {/* loading.tsx passes a skeleton, which can't go inside a heading. */}
+            {typeof title === "string" ? (
+              <h1 className="truncate text-2xl font-semibold tracking-tight">{title}</h1>
+            ) : (
+              title
+            )}
+            <div className="text-sm text-muted-foreground">{description}</div>
+          </div>
+          {action}
+        </div>
+      </div>
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">{children}</div>
+    </div>
+  );
+}
+
+type SectionKey = "contributors" | "concepts" | "assessments";
+
+const SECTIONS: Record<
+  SectionKey,
+  { icon: LucideIcon; title: string; description: string; className?: string }
+> = {
+  contributors: {
+    icon: UsersIcon,
+    title: "Contributors",
+    description: "People who have committed to this codebase.",
+  },
+  concepts: {
+    icon: LightbulbIcon,
+    title: "Concepts",
+    description: "The core ideas this codebase is built around.",
+  },
+  assessments: {
+    icon: ClipboardListIcon,
+    title: "Assessments",
+    description: "Question sets that measure how well contributors understand each concept.",
+    className: "md:col-span-2",
+  },
+};
+
+function SectionCard({
+  section,
+  count,
+  children,
+}: {
+  section: SectionKey;
+  count?: number;
+  children: ReactNode;
+}) {
+  const { icon: Icon, title, description, className } = SECTIONS[section];
+  return (
+    <Card className={className}>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Icon className="size-4 text-muted-foreground" />
+          {title}
+        </CardTitle>
+        <CardDescription>{description}</CardDescription>
+        {count !== undefined && (
+          <CardAction>
+            <Badge variant="secondary">{count}</Badge>
+          </CardAction>
+        )}
+      </CardHeader>
+      <CardContent>{children}</CardContent>
+    </Card>
+  );
+}
+
+function SectionMessage({ children }: { children: ReactNode }) {
+  return <p className="text-muted-foreground">{children}</p>;
+}
+
+export function ContributorsSection({
+  contributors,
+}: {
+  contributors: ContributorResponse[] | undefined;
+}) {
+  return (
+    <SectionCard
+      section="contributors"
+      count={contributors?.length}
+    >
+      {contributors === undefined ? (
+        <SectionMessage>Couldn&apos;t load contributors. Refresh to try again.</SectionMessage>
+      ) : contributors.length === 0 ? (
+        <SectionMessage>No contributors found yet.</SectionMessage>
+      ) : (
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Name</TableHead>
+              <TableHead>Email</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {contributors.map((contributor) => (
+              <TableRow key={contributor.id}>
+                <TableCell className="font-medium">{contributor.name}</TableCell>
+                <TableCell className="text-muted-foreground">{contributor.email}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      )}
+    </SectionCard>
+  );
+}
+
+export function ConceptsSection({ concepts }: { concepts: ConceptResponse[] | undefined }) {
+  return (
+    <SectionCard
+      section="concepts"
+      count={concepts?.length}
+    >
+      {concepts === undefined ? (
+        <SectionMessage>Couldn&apos;t load concepts. Refresh to try again.</SectionMessage>
+      ) : concepts.length === 0 ? (
+        <SectionMessage>No concepts found yet.</SectionMessage>
+      ) : (
+        <div className="flex flex-wrap gap-2">
+          {concepts.map((concept) => (
+            <Badge key={concept.id} variant="outline">
+              {concept.name}
+            </Badge>
+          ))}
+        </div>
+      )}
+    </SectionCard>
+  );
+}
+
+export function AssessmentsSection({
+  assessments,
+}: {
+  assessments: AssessmentResponse[] | undefined;
+}) {
+  return (
+    <SectionCard
+      section="assessments"
+      count={assessments?.length}
+    >
+      {assessments === undefined ? (
+        <SectionMessage>Couldn&apos;t load assessments. Refresh to try again.</SectionMessage>
+      ) : assessments.length === 0 ? (
+        <SectionMessage>
+          No assessments yet. Create one to start measuring understanding.
+        </SectionMessage>
+      ) : (
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Created</TableHead>
+              <TableHead>Questions</TableHead>
+              <TableHead className="text-right">Status</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {assessments.map((assessment) => (
+              <TableRow key={assessment.id}>
+                <TableCell className="font-medium">
+                  <time dateTime={assessment.created_at}>
+                    {dateFormat.format(new Date(assessment.created_at))}
+                  </time>
+                </TableCell>
+                <TableCell>{assessment.question_count}</TableCell>
+                <TableCell className="text-right">
+                  <Badge variant={assessment.active ? "default" : "secondary"}>
+                    {assessment.active ? "Active" : "Closed"}
+                  </Badge>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      )}
+    </SectionCard>
+  );
+}
+
+export function CodebaseSectionsSkeleton() {
+  return (Object.keys(SECTIONS) as SectionKey[]).map((section) => (
+    <SectionCard key={section} section={section}>
+      <div
+        className="flex flex-col gap-2"
+        aria-busy="true"
+        aria-label={`Loading ${SECTIONS[section].title.toLowerCase()}`}
+      >
+        <Skeleton className="h-4 w-full" />
+        <Skeleton className="h-4 w-5/6" />
+        <Skeleton className="h-4 w-2/3" />
+      </div>
+    </SectionCard>
+  ));
+}

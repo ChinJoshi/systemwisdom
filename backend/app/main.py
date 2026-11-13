@@ -2,18 +2,22 @@ import uuid
 from typing import Annotated
 
 from app.api_models import (
+    AssessmentResponse,
     AuthenticatedUser,
     CodebaseResponse,
+    ConceptResponse,
+    ContributorResponse,
     CreateCodebaseRequest,
     MeResponse,
 )
 from app.db.db import Session
-from app.db.db_models import Codebase
+from app.db.db_models import Assessment, Codebase, Concept, Contributor, Question
 from app.security import authenticated_user, verified_signature
 from fastapi import APIRouter, Depends, FastAPI, HTTPException
 from fastapi.routing import APIRoute
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.dialects.postgresql import insert
+from sqlalchemy.orm import Session as SessionType
 
 
 # Use the route function name as the OpenAPI operationId (e.g. `get_me`) so the
@@ -52,20 +56,87 @@ def list_codebases(
         return [CodebaseResponse.model_validate(c) for c in codebases]
 
 
+# Returns the codebase if it belongs to the user. Raises 404 (not 403) otherwise, so other users'
+# codebase ids aren't revealed to exist.
+def get_owned_codebase(
+    session: SessionType, codebase_id: uuid.UUID, user_id: str
+) -> Codebase:
+    codebase = session.scalar(
+        select(Codebase).where(Codebase.id == codebase_id, Codebase.user_id == user_id)
+    )
+    if codebase is None:
+        raise HTTPException(status_code=404, detail="Codebase not found")
+    return codebase
+
+
 @api_router.get("/codebases/{codebase_id}")
 def get_codebase(
     codebase_id: uuid.UUID,
     user: Annotated[AuthenticatedUser, Depends(authenticated_user)],
 ) -> CodebaseResponse:
     with Session() as session:
-        codebase = session.scalar(
-            select(Codebase).where(
-                Codebase.id == codebase_id, Codebase.user_id == user.user_id
-            )
-        )
-        if codebase is None:
-            raise HTTPException(status_code=404, detail="Codebase not found")
+        codebase = get_owned_codebase(session, codebase_id, user.user_id)
         return CodebaseResponse.model_validate(codebase)
+
+
+@api_router.get("/codebases/{codebase_id}/contributors")
+def list_contributors(
+    codebase_id: uuid.UUID,
+    user: Annotated[AuthenticatedUser, Depends(authenticated_user)],
+) -> list[ContributorResponse]:
+    with Session() as session:
+        get_owned_codebase(session, codebase_id, user.user_id)
+        contributors = session.scalars(
+            select(Contributor)
+            .where(Contributor.codebase_id == codebase_id)
+            .order_by(Contributor.name)
+        ).all()
+        return [ContributorResponse.model_validate(c) for c in contributors]
+
+
+@api_router.get("/codebases/{codebase_id}/concepts")
+def list_concepts(
+    codebase_id: uuid.UUID,
+    user: Annotated[AuthenticatedUser, Depends(authenticated_user)],
+) -> list[ConceptResponse]:
+    with Session() as session:
+        get_owned_codebase(session, codebase_id, user.user_id)
+        concepts = session.scalars(
+            select(Concept)
+            .where(Concept.codebase_id == codebase_id)
+            .order_by(Concept.name)
+        ).all()
+        return [ConceptResponse.model_validate(c) for c in concepts]
+
+
+@api_router.get("/codebases/{codebase_id}/assessments")
+def list_assessments(
+    codebase_id: uuid.UUID,
+    user: Annotated[AuthenticatedUser, Depends(authenticated_user)],
+) -> list[AssessmentResponse]:
+    with Session() as session:
+        get_owned_codebase(session, codebase_id, user.user_id)
+        question_count = (
+            select(func.count(Question.id))
+            .where(Question.assessment_id == Assessment.id)
+            .correlate(Assessment)
+            .scalar_subquery()
+        )
+        rows = session.execute(
+            select(Assessment, question_count)
+            .where(Assessment.codebase_id == codebase_id)
+            # The active assessment (at most one) first, then the rest newest first.
+            .order_by(Assessment.active.desc(), Assessment.created_at.desc())
+        ).all()
+        return [
+            AssessmentResponse(
+                id=assessment.id,
+                active=assessment.active,
+                question_count=count,
+                created_at=assessment.created_at,
+            )
+            for assessment, count in rows
+        ]
 
 
 # Called by the frontend's Vercel Blob upload callback (not by browsers) after a codebase zip has

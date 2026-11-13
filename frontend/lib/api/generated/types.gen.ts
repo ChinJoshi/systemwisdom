@@ -5,6 +5,28 @@ export type ClientOptions = {
 };
 
 /**
+ * AssessmentResponse
+ */
+export type AssessmentResponse = {
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Active
+     */
+    active: boolean;
+    /**
+     * Question Count
+     */
+    question_count: number;
+    /**
+     * Created At
+     */
+    created_at: string;
+};
+
+/**
  * CodebaseResponse
  */
 export type CodebaseResponse = {
@@ -20,6 +42,38 @@ export type CodebaseResponse = {
      * Created At
      */
     created_at: string;
+};
+
+/**
+ * ConceptResponse
+ */
+export type ConceptResponse = {
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Name
+     */
+    name: string;
+};
+
+/**
+ * ContributorResponse
+ */
+export type ContributorResponse = {
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Email
+     */
+    email: string;
 };
 
 /**
@@ -157,6 +211,102 @@ export type GetCodebaseResponses = {
 };
 
 export type GetCodebaseResponse = GetCodebaseResponses[keyof GetCodebaseResponses];
+
+export type ListContributorsData = {
+    body?: never;
+    path: {
+        /**
+         * Codebase Id
+         */
+        codebase_id: string;
+    };
+    query?: never;
+    url: '/api/codebases/{codebase_id}/contributors';
+};
+
+export type ListContributorsErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ListContributorsError = ListContributorsErrors[keyof ListContributorsErrors];
+
+export type ListContributorsResponses = {
+    /**
+     * Response List Contributors
+     *
+     * Successful Response
+     */
+    200: Array<ContributorResponse>;
+};
+
+export type ListContributorsResponse = ListContributorsResponses[keyof ListContributorsResponses];
+
+export type ListConceptsData = {
+    body?: never;
+    path: {
+        /**
+         * Codebase Id
+         */
+        codebase_id: string;
+    };
+    query?: never;
+    url: '/api/codebases/{codebase_id}/concepts';
+};
+
+export type ListConceptsErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ListConceptsError = ListConceptsErrors[keyof ListConceptsErrors];
+
+export type ListConceptsResponses = {
+    /**
+     * Response List Concepts
+     *
+     * Successful Response
+     */
+    200: Array<ConceptResponse>;
+};
+
+export type ListConceptsResponse = ListConceptsResponses[keyof ListConceptsResponses];
+
+export type ListAssessmentsData = {
+    body?: never;
+    path: {
+        /**
+         * Codebase Id
+         */
+        codebase_id: string;
+    };
+    query?: never;
+    url: '/api/codebases/{codebase_id}/assessments';
+};
+
+export type ListAssessmentsErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ListAssessmentsError = ListAssessmentsErrors[keyof ListAssessmentsErrors];
+
+export type ListAssessmentsResponses = {
+    /**
+     * Response List Assessments
+     *
+     * Successful Response
+     */
+    200: Array<AssessmentResponse>;
+};
+
+export type ListAssessmentsResponse = ListAssessmentsResponses[keyof ListAssessmentsResponses];
 
 export type CreateCodebaseData = {
     body: CreateCodebaseRequest;
