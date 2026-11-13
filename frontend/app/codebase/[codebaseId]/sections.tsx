@@ -23,6 +23,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Spinner } from "@/components/ui/spinner";
 import {
   Table,
   TableBody,
@@ -229,9 +230,7 @@ export function AssessmentsSection({
                 </TableCell>
                 <TableCell>{assessment.question_count}</TableCell>
                 <TableCell className="text-right">
-                  <Badge variant={assessment.active ? "default" : "secondary"}>
-                    {assessment.active ? "Active" : "Closed"}
-                  </Badge>
+                  <AssessmentStatusBadge assessment={assessment} />
                 </TableCell>
               </TableRow>
             ))}
@@ -239,6 +238,25 @@ export function AssessmentsSection({
         </Table>
       )}
     </SectionCard>
+  );
+}
+
+function AssessmentStatusBadge({ assessment }: { assessment: AssessmentResponse }) {
+  if (assessment.status === "generating") {
+    return (
+      <Badge variant="secondary">
+        <Spinner data-icon="inline-start" />
+        Generating
+      </Badge>
+    );
+  }
+  if (assessment.status === "failed") {
+    return <Badge variant="destructive">Failed</Badge>;
+  }
+  return (
+    <Badge variant={assessment.active ? "default" : "secondary"}>
+      {assessment.active ? "Active" : "Closed"}
+    </Badge>
   );
 }
 

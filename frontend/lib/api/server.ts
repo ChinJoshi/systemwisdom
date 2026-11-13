@@ -2,7 +2,7 @@ import { withAuth } from "@workos-inc/authkit-nextjs";
 import { createClient, createConfig } from "./generated/client";
 
 // API client for server components, server actions and route handlers:
-//   const { data } = await getMe({ client: serverApiClient });
+//   const { data } = await listCodebases({ client: serverApiClient });
 //
 // Calls the backend directly at the URL injected by the service binding in vercel.json, sending
 // the signed-in user's access token from withAuth() as `Authorization: Bearer <token>` on every

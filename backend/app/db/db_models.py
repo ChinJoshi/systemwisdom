@@ -1,5 +1,6 @@
 import datetime
 import uuid
+from enum import StrEnum
 from typing import TypedDict
 
 from sqlalchemy import (
@@ -56,6 +57,15 @@ class Concept(TimestampMixin, Base):
     codebase_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("codebases.id"))
 
 
+class AssessmentStatus(StrEnum):
+    # The agent is generating the questions; the assessment isn't usable yet.
+    GENERATING = "generating"
+    # Questions are stored and the assessment can be taken.
+    READY = "ready"
+    # Generation failed; `Assessment.error` says why.
+    FAILED = "failed"
+
+
 class Assessment(TimestampMixin, Base):
     __tablename__ = "assessments"
     __table_args__ = (
@@ -66,6 +76,9 @@ class Assessment(TimestampMixin, Base):
             unique=True,
             postgresql_where=text("active"),
         ),
+        CheckConstraint(
+            "status IN ('generating', 'ready', 'failed')", name="ck_assessment_status"
+        ),
     )
 
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
@@ -73,6 +86,15 @@ class Assessment(TimestampMixin, Base):
         ForeignKey("codebases.id"), index=True
     )
     active: Mapped[bool] = mapped_column(Boolean, default=True, server_default="true")
+    # Rows that predate agent generation are complete, hence the "ready" server default. New
+    # assessments are inserted as "generating" (and inactive) until the agent's results arrive.
+    status: Mapped[str] = mapped_column(
+        String(20), default=AssessmentStatus.READY, server_default=AssessmentStatus.READY
+    )
+    # The eve session generating this assessment, for tracing a run in Agent Runs.
+    agent_session_id: Mapped[str | None] = mapped_column(String(255))
+    # Why generation failed, when status is "failed".
+    error: Mapped[str | None] = mapped_column(Text)
 
 
 class Question(TimestampMixin, Base):

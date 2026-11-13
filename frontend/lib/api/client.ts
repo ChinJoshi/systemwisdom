@@ -6,7 +6,7 @@ import { createClient, createConfig } from "./generated/client";
 
 // API client for client components (must render inside <AuthKitProvider>):
 //   const apiClient = useApiClient();
-//   const { data } = await getMe({ client: apiClient });
+//   const { data } = await listCodebases({ client: apiClient });
 //
 // Requests are same-origin (vercel.json rewrites /api/* to the backend). The bearer token comes
 // from AuthKit's useAccessToken().getAccessToken(), which caches the token and refreshes it

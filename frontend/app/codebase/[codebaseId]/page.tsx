@@ -1,9 +1,8 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { cache } from "react";
 import { withAuth } from "@workos-inc/authkit-nextjs";
-import { CircleAlertIcon, PlusIcon } from "lucide-react";
+import { CircleAlertIcon } from "lucide-react";
 import {
   getCodebase,
   listAssessments,
@@ -12,7 +11,6 @@ import {
 } from "@/lib/api/generated";
 import { serverApiClient } from "@/lib/api/server";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
 import {
   AssessmentsSection,
   CodebaseShell,
@@ -20,6 +18,8 @@ import {
   ContributorsSection,
   dateFormat,
 } from "./sections";
+import { CreateAssessmentButton } from "./create-assessment-button";
+import { RefreshWhileGenerating } from "./refresh-while-generating";
 
 // Shared by generateMetadata and the page, so a render fetches the codebase once.
 const loadCodebase = cache(async (codebaseId: string) => {
@@ -55,6 +55,9 @@ export default async function CodebasePage({
     listAssessments({ client: serverApiClient, path }),
   ]);
 
+  const generating =
+    assessments.data?.some((assessment) => assessment.status === "generating") ?? false;
+
   if (codebase === undefined) {
     return (
       <CodebaseShell title="Codebase" description={null}>
@@ -80,17 +83,9 @@ export default async function CodebasePage({
           </time>
         </>
       }
-      action={
-        <Button
-          size="lg"
-          render={<Link href={`/codebase/${codebase.id}/assessments/new`} />}
-          nativeButton={false}
-        >
-          <PlusIcon data-icon="inline-start" />
-          Create assessment
-        </Button>
-      }
+      action={<CreateAssessmentButton codebaseId={codebase.id} generating={generating} />}
     >
+      <RefreshWhileGenerating active={generating} />
       <ContributorsSection contributors={contributors.data} />
       <ConceptsSection concepts={concepts.data} />
       <AssessmentsSection assessments={assessments.data} />

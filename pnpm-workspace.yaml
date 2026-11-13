@@ -6,3 +6,7 @@ minimumReleaseAgeStrict: true
 allowBuilds:
   esbuild: true
   sharp: false
+
+ignoredOptionalDependencies:
+  - "@mongodb-js/zstd"
+  - "node-liblzma"

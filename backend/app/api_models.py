@@ -1,8 +1,9 @@
 import uuid
 from datetime import datetime
-from typing import Annotated, List, Optional
+from typing import Annotated, Any, List, Literal, Optional
 
-from pydantic import BaseModel, ConfigDict, StringConstraints
+from app.db.db_models import AssessmentStatus
+from pydantic import BaseModel, ConfigDict, Field, StringConstraints, model_validator
 
 
 class ActClaim(BaseModel):
@@ -75,5 +76,103 @@ class ConceptResponse(BaseModel):
 class AssessmentResponse(BaseModel):
     id: uuid.UUID
     active: bool
+    status: AssessmentStatus
     question_count: int
     created_at: datetime
+
+
+# --- Agent-generated assessments ---------------------------------------------------------------
+# `GeneratedAssessment` is both the `outputSchema` sent to the eve agent (as JSON Schema, see
+# app/agent.py) and the validator for the result it returns, so the two can't drift apart.
+
+NonEmptyStr = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
+
+
+class GeneratedConcept(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    name: Annotated[
+        str, StringConstraints(strip_whitespace=True, min_length=1, max_length=255)
+    ] = Field(description="Short, specific name for a system or concept in this codebase.")
+
+
+class GeneratedContributor(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    name: Annotated[
+        str, StringConstraints(strip_whitespace=True, min_length=1, max_length=255)
+    ] = Field(description="Author name, exactly as list_git_contributors returned it.")
+    email: Annotated[
+        str,
+        StringConstraints(
+            strip_whitespace=True, to_lower=True, min_length=3, max_length=320
+        ),
+    ] = Field(description="Author email, exactly as list_git_contributors returned it.")
+
+
+class GeneratedQuestion(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    concept: NonEmptyStr = Field(
+        description="The exact `name` of the concept this question tests."
+    )
+    question: Annotated[
+        str, StringConstraints(strip_whitespace=True, min_length=1, max_length=2000)
+    ]
+    choices: Annotated[
+        list[Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=1000)]],
+        Field(min_length=4, max_length=4),
+    ] = Field(description="Exactly four answer options, only one of them correct.")
+    correct_index: Annotated[int, Field(ge=0, le=3)] = Field(
+        description="0-based index into `choices` of the single correct option."
+    )
+
+    @model_validator(mode="after")
+    def choices_are_distinct(self) -> "GeneratedQuestion":
+        if len({choice.casefold() for choice in self.choices}) != len(self.choices):
+            raise ValueError("A question's four choices must be distinct")
+        return self
+
+
+class GeneratedAssessment(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    concepts: Annotated[list[GeneratedConcept], Field(min_length=1, max_length=10)] = Field(
+        description="The most important concepts and systems in the codebase, at most 10."
+    )
+    contributors: list[GeneratedContributor] = Field(
+        description="Commit authors from the git history; empty when there is no .git directory."
+    )
+    questions: Annotated[list[GeneratedQuestion], Field(min_length=1, max_length=30)] = Field(
+        description="Multiple-choice questions, 2-3 per concept."
+    )
+
+    @model_validator(mode="after")
+    def questions_reference_concepts(self) -> "GeneratedAssessment":
+        names = [concept.name for concept in self.concepts]
+        if len(set(names)) != len(names):
+            raise ValueError("Concept names must be unique")
+        unknown = {q.concept for q in self.questions} - set(names)
+        if unknown:
+            raise ValueError(f"Questions reference unknown concepts: {sorted(unknown)}")
+        return self
+
+
+class AssessmentWebhookCompleted(BaseModel):
+    status: Literal["completed"]
+    session_id: str
+    # Validated as GeneratedAssessment in the handler, so an invalid result can be recorded as a
+    # failed assessment instead of only being rejected.
+    result: dict[str, Any]
+
+
+class AssessmentWebhookFailed(BaseModel):
+    status: Literal["failed"]
+    session_id: str
+    error: str
+
+
+# Sent by the eve agent's assessment-webhook hook when its turn settles.
+AssessmentWebhook = Annotated[
+    AssessmentWebhookCompleted | AssessmentWebhookFailed, Field(discriminator="status")
+]
