@@ -25,7 +25,8 @@ from app.db.db_models import (
 from app.routers.codebase.helpers import get_owned_codebase
 from app.security import authenticated_user
 from fastapi import APIRouter, Depends, HTTPException, Request
-from sqlalchemy import func, select, update
+from sqlalchemy import delete, func, select, update
+from sqlalchemy.orm import Session as SessionType
 
 router = APIRouter(prefix="/codebases/{codebase_id}/assessments")
 
@@ -331,4 +332,39 @@ def get_assessment_results(
             concepts=concepts,
             contributors=results,
         )
+
+
+# Deletes an assessment's rows children-first, since the foreign keys don't cascade: the scores it
+# produced, its questions, then the assessment. The codebase's concepts and contributors stay,
+# since other assessments share them. The caller commits.
+def delete_assessment_rows(session: SessionType, assessment_id: uuid.UUID) -> None:
+    session.execute(
+        delete(ContributorUnderstanding).where(
+            ContributorUnderstanding.assessment_id == assessment_id
+        )
+    )
+    session.execute(delete(Question).where(Question.assessment_id == assessment_id))
+    session.execute(delete(Assessment).where(Assessment.id == assessment_id))
+
+
+# Deletes the assessment with its questions and the scores it produced. Deleting the active
+# assessment leaves the codebase with none until another is generated. An assessment still
+# generating can be deleted too; its agent's result webhook then gets a 404 and stops.
+@router.delete("/{assessment_id}", status_code=204)
+def delete_assessment(
+    codebase_id: uuid.UUID,
+    assessment_id: uuid.UUID,
+    user: Annotated[AuthenticatedUser, Depends(authenticated_user)],
+) -> None:
+    with Session() as session:
+        get_owned_codebase(session, codebase_id, user.user_id)
+        assessment = session.scalar(
+            select(Assessment).where(
+                Assessment.id == assessment_id, Assessment.codebase_id == codebase_id
+            )
+        )
+        if assessment is None:
+            raise HTTPException(status_code=404, detail="Assessment not found")
+        delete_assessment_rows(session, assessment_id)
+        session.commit()
 

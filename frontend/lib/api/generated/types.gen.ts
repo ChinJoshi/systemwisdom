@@ -419,6 +419,36 @@ export type ListCodebasesResponses = {
 
 export type ListCodebasesResponse = ListCodebasesResponses[keyof ListCodebasesResponses];
 
+export type DeleteCodebaseData = {
+    body?: never;
+    path: {
+        /**
+         * Codebase Id
+         */
+        codebase_id: string;
+    };
+    query?: never;
+    url: '/api/codebases/{codebase_id}';
+};
+
+export type DeleteCodebaseErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type DeleteCodebaseError = DeleteCodebaseErrors[keyof DeleteCodebaseErrors];
+
+export type DeleteCodebaseResponses = {
+    /**
+     * Successful Response
+     */
+    204: void;
+};
+
+export type DeleteCodebaseResponse = DeleteCodebaseResponses[keyof DeleteCodebaseResponses];
+
 export type GetCodebaseData = {
     body?: never;
     path: {
@@ -642,6 +672,40 @@ export type GetAssessmentResultsResponses = {
 };
 
 export type GetAssessmentResultsResponse = GetAssessmentResultsResponses[keyof GetAssessmentResultsResponses];
+
+export type DeleteAssessmentData = {
+    body?: never;
+    path: {
+        /**
+         * Codebase Id
+         */
+        codebase_id: string;
+        /**
+         * Assessment Id
+         */
+        assessment_id: string;
+    };
+    query?: never;
+    url: '/api/codebases/{codebase_id}/assessments/{assessment_id}';
+};
+
+export type DeleteAssessmentErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type DeleteAssessmentError = DeleteAssessmentErrors[keyof DeleteAssessmentErrors];
+
+export type DeleteAssessmentResponses = {
+    /**
+     * Successful Response
+     */
+    204: void;
+};
+
+export type DeleteAssessmentResponse = DeleteAssessmentResponses[keyof DeleteAssessmentResponses];
 
 export type GetAssessmentToTakeData = {
     body?: never;

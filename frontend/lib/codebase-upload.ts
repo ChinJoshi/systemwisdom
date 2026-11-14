@@ -6,7 +6,7 @@
 export const CODEBASE_UPLOAD_URL = "/codebases/upload";
 
 export const ZIP_CONTENT_TYPE = "application/zip";
-export const MAX_CODEBASE_SIZE_BYTES = 150 * 1024 * 1024; // 50 MB
+export const MAX_CODEBASE_SIZE_BYTES = 200 * 1024 * 1024; // 200 MB, mirrored by MAX_ZIP_BYTES in agent/tools/download_codebase.ts
 export const MAX_CODEBASE_NAME_LENGTH = 255; // codebases.name is VARCHAR(255)
 
 // Sent by the browser as the upload's clientPayload. Untrusted: the server validates it.

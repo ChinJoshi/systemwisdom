@@ -22,6 +22,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
 import {
@@ -33,6 +34,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { ActiveAssessmentActions } from "./active-assessment-actions";
+import { AssessmentRowMenu } from "./assessment-row-menu";
 
 export const dateFormat = new Intl.DateTimeFormat("en-US", { dateStyle: "medium" });
 // Assessment creation times, in UTC so the server render is the same for every viewer.
@@ -143,6 +145,20 @@ function SectionMessage({ children }: { children: ReactNode }) {
   return <p className="text-muted-foreground">{children}</p>;
 }
 
+// Past this many contributors, the list scrolls inside the card instead of growing it.
+const MAX_UNSCROLLED_CONTRIBUTORS = 10;
+
+function ContributorsScrollArea({
+  scrollable,
+  children,
+}: {
+  scrollable: boolean;
+  children: ReactNode;
+}) {
+  // A fixed height that cuts the last visible row partway, which hints there's more to scroll.
+  return scrollable ? <ScrollArea className="h-80">{children}</ScrollArea> : children;
+}
+
 export function ContributorsSection({
   contributors,
 }: {
@@ -158,22 +174,24 @@ export function ContributorsSection({
       ) : contributors.length === 0 ? (
         <SectionMessage>No contributors found yet.</SectionMessage>
       ) : (
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Email</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {contributors.map((contributor) => (
-              <TableRow key={contributor.id}>
-                <TableCell className="font-medium">{contributor.name}</TableCell>
-                <TableCell className="text-muted-foreground">{contributor.email}</TableCell>
+        <ContributorsScrollArea scrollable={contributors.length > MAX_UNSCROLLED_CONTRIBUTORS}>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead>Email</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {contributors.map((contributor) => (
+                <TableRow key={contributor.id}>
+                  <TableCell className="font-medium">{contributor.name}</TableCell>
+                  <TableCell className="text-muted-foreground">{contributor.email}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </ContributorsScrollArea>
       )}
     </SectionCard>
   );
@@ -228,7 +246,7 @@ export function AssessmentsSection({
               <TableHead>Questions</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>
-                <span className="sr-only">Share</span>
+                <span className="sr-only">Actions</span>
               </TableHead>
             </TableRow>
           </TableHeader>
@@ -261,16 +279,22 @@ export function AssessmentsSection({
                   <TableCell>
                     <AssessmentStatusBadge assessment={assessment} />
                   </TableCell>
-                  <TableCell className="text-right">
-                    {/* Only the active, ready assessment can be taken. Sits above the row link. */}
-                    {assessment.active && assessment.status === "ready" && (
-                      <div className="relative z-10">
+                  <TableCell>
+                    {/* Sits above the row link, so its buttons stay clickable. */}
+                    <div className="relative z-10 flex items-center justify-end gap-1">
+                      {/* Only the active, ready assessment can be taken. */}
+                      {assessment.active && assessment.status === "ready" && (
                         <ActiveAssessmentActions
                           codebaseId={codebaseId}
                           assessmentId={assessment.id}
                         />
-                      </div>
-                    )}
+                      )}
+                      <AssessmentRowMenu
+                        codebaseId={codebaseId}
+                        assessmentId={assessment.id}
+                        active={assessment.active}
+                      />
+                    </div>
                   </TableCell>
                 </TableRow>
               );

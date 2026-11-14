@@ -14,7 +14,7 @@ import {
 // Vercel Blob client uploads (https://vercel.com/docs/vercel-blob/client-upload). This route gets
 // two kinds of requests:
 //   1. blob.generate-client-token, from the signed-in user's browser: authenticate them and issue
-//      a token that only allows a zip of at most 15 MB at the expected pathname.
+//      a token that only allows a zip of at most MAX_CODEBASE_SIZE_BYTES (200 MB) at the expected pathname.
 //   2. blob.upload-completed, from Vercel Blob once the file is stored (no user session; handleUpload
 //      verifies the request signature): record the codebase in the backend.
 export async function POST(request: Request): Promise<NextResponse> {

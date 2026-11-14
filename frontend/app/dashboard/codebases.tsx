@@ -7,6 +7,7 @@ import { AddCodebaseSheet } from "@/components/add-codebase-sheet";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
   Card,
+  CardAction,
   CardDescription,
   CardHeader,
   CardTitle,
@@ -20,6 +21,7 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty";
 import { Skeleton } from "@/components/ui/skeleton";
+import { CodebaseCardMenu } from "./codebase-card-menu";
 
 // Shared by the header's add button and the list, so a render makes one backend call.
 const getCodebases = cache(async () => {
@@ -121,23 +123,32 @@ export function CodebaseListSkeleton() {
   );
 }
 
+// The title's link stretches over the whole card (its ::after), so the card is clickable while the
+// actions menu, which sits above that overlay, stays its own button. A button can't go inside a
+// link, which is why the card isn't simply wrapped in one.
 function CodebaseCard({ codebase }: { codebase: CodebaseResponse }) {
   return (
-    <Link href={`/codebase/${codebase.id}`} className="group/codebase outline-none">
-      <Card className="h-full transition-colors group-hover/codebase:bg-muted/50 group-hover/codebase:ring-foreground/20 group-focus-visible/codebase:ring-2 group-focus-visible/codebase:ring-ring">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <FolderGit2Icon className="size-4 text-muted-foreground" />
-            <span className="truncate">{codebase.name}</span>
-          </CardTitle>
-          <CardDescription>
-            Added{" "}
-            <time dateTime={codebase.created_at}>
-              {dateFormat.format(new Date(codebase.created_at))}
-            </time>
-          </CardDescription>
-        </CardHeader>
-      </Card>
-    </Link>
+    <Card className="relative h-full transition-colors has-[a:hover]:bg-muted/50 has-[a:hover]:ring-foreground/20 has-[a:focus-visible]:ring-2 has-[a:focus-visible]:ring-ring">
+      <CardHeader>
+        <CardTitle className="flex min-w-0 items-center gap-2">
+          <FolderGit2Icon className="size-4 shrink-0 text-muted-foreground" />
+          <Link
+            href={`/codebase/${codebase.id}`}
+            className="truncate outline-none after:absolute after:inset-0 after:content-['']"
+          >
+            {codebase.name}
+          </Link>
+        </CardTitle>
+        <CardDescription>
+          Added{" "}
+          <time dateTime={codebase.created_at}>
+            {dateFormat.format(new Date(codebase.created_at))}
+          </time>
+        </CardDescription>
+        <CardAction className="relative z-10">
+          <CodebaseCardMenu codebaseId={codebase.id} name={codebase.name} />
+        </CardAction>
+      </CardHeader>
+    </Card>
   );
 }
