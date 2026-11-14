@@ -39,9 +39,8 @@ def get_takeable_assessment(session: SessionType, assessment_id: uuid.UUID) -> A
     if assessment is None or assessment.status != AssessmentStatus.READY:
         raise HTTPException(status_code=404, detail="Assessment not found")
     if not assessment.active:
-        raise HTTPException(
-            status_code=410, detail="This assessment has been replaced by a newer one"
-        )
+        # Closed manually or replaced by a newer assessment.
+        raise HTTPException(status_code=410, detail="This assessment is closed")
     return assessment
 
 

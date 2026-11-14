@@ -32,7 +32,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { AssessmentLinkActions } from "./assessment-link-actions";
+import { ActiveAssessmentActions } from "./active-assessment-actions";
 
 export const dateFormat = new Intl.DateTimeFormat("en-US", { dateStyle: "medium" });
 
@@ -197,8 +197,10 @@ export function ConceptsSection({ concepts }: { concepts: ConceptResponse[] | un
 }
 
 export function AssessmentsSection({
+  codebaseId,
   assessments,
 }: {
+  codebaseId: string;
   assessments: AssessmentResponse[] | undefined;
 }) {
   return (
@@ -239,7 +241,7 @@ export function AssessmentsSection({
                 <TableCell className="text-right">
                   {/* Only the active, ready assessment can be taken. */}
                   {assessment.active && assessment.status === "ready" && (
-                    <AssessmentLinkActions assessmentId={assessment.id} />
+                    <ActiveAssessmentActions codebaseId={codebaseId} assessmentId={assessment.id} />
                   )}
                 </TableCell>
               </TableRow>

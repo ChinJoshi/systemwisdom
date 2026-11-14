@@ -18,7 +18,8 @@ const loadAssessment = cache(async (assessmentId: string) => {
   });
   // 404: missing or not ready yet. 422: the id isn't a valid UUID.
   if (response?.status === 404 || response?.status === 422) notFound();
-  return { assessment: data, replaced: response?.status === 410 };
+  // 410: closed, manually or by a newer assessment.
+  return { assessment: data, closed: response?.status === 410 };
 });
 
 export async function generateMetadata({
@@ -35,19 +36,19 @@ export async function generateMetadata({
 export default async function AssessmentPage({
   params,
 }: PageProps<"/codebase/assessment/[assessmentId]">) {
-  const { assessment, replaced } = await loadAssessment((await params).assessmentId);
+  const { assessment, closed } = await loadAssessment((await params).assessmentId);
 
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-4 py-10">
       {assessment === undefined ? (
-        <Alert variant={replaced ? "default" : "destructive"}>
+        <Alert variant={closed ? "default" : "destructive"}>
           <CircleAlertIcon />
           <AlertTitle>
-            {replaced ? "This assessment is closed" : "Couldn't load this assessment"}
+            {closed ? "This assessment is closed" : "Couldn't load this assessment"}
           </AlertTitle>
           <AlertDescription>
-            {replaced
-              ? "A newer assessment has replaced it. Ask the person who sent you this link for the current one."
+            {closed
+              ? "It no longer accepts answers. Ask the person who sent you this link whether there's a current one."
               : "Something went wrong reaching the server. Refresh the page to try again."}
           </AlertDescription>
         </Alert>

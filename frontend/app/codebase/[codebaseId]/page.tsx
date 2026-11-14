@@ -88,7 +88,7 @@ export default async function CodebasePage({
       <RefreshWhileGenerating active={generating} />
       <ContributorsSection contributors={contributors.data} />
       <ConceptsSection concepts={concepts.data} />
-      <AssessmentsSection assessments={assessments.data} />
+      <AssessmentsSection codebaseId={codebase.id} assessments={assessments.data} />
     </CodebaseShell>
   );
 }

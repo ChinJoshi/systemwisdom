@@ -205,3 +205,40 @@ def create_assessment(
         question_count=0,
         created_at=created_at,
     )
+
+
+# Closes an assessment so contributors can no longer take it: its public link stops accepting
+# answers (410), and its concepts leave the codebase page. Scores already recorded are kept.
+# Closing is permanent. Closing an already closed assessment changes nothing.
+@router.post("/{assessment_id}/close")
+def close_assessment(
+    codebase_id: uuid.UUID,
+    assessment_id: uuid.UUID,
+    user: Annotated[AuthenticatedUser, Depends(authenticated_user)],
+) -> AssessmentResponse:
+    with Session() as session:
+        get_owned_codebase(session, codebase_id, user.user_id)
+        assessment = session.scalar(
+            select(Assessment).where(
+                Assessment.id == assessment_id, Assessment.codebase_id == codebase_id
+            )
+        )
+        if assessment is None:
+            raise HTTPException(status_code=404, detail="Assessment not found")
+        if assessment.status != AssessmentStatus.READY:
+            raise HTTPException(
+                status_code=409, detail="Only a generated assessment can be closed"
+            )
+        assessment.active = False
+        question_count = session.scalar(
+            select(func.count(Question.id)).where(Question.assessment_id == assessment_id)
+        )
+        response = AssessmentResponse(
+            id=assessment.id,
+            active=False,
+            status=AssessmentStatus(assessment.status),
+            question_count=question_count or 0,
+            created_at=assessment.created_at,
+        )
+        session.commit()
+        return response

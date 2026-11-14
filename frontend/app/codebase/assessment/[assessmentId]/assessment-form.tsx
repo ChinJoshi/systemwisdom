@@ -113,7 +113,7 @@ export function AssessmentForm({ assessment }: { assessment: TakeAssessmentRespo
           : null;
       setSubmitError(
         response?.status === 410
-          ? "This assessment was replaced by a newer one while you were taking it."
+          ? "This assessment was closed while you were taking it, so your answers weren't recorded."
           : (detail ?? "We couldn't submit your answers. Check your connection and try again."),
       );
     },

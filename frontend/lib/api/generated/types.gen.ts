@@ -520,6 +520,40 @@ export type CreateAssessmentResponses = {
 
 export type CreateAssessmentResponse = CreateAssessmentResponses[keyof CreateAssessmentResponses];
 
+export type CloseAssessmentData = {
+    body?: never;
+    path: {
+        /**
+         * Codebase Id
+         */
+        codebase_id: string;
+        /**
+         * Assessment Id
+         */
+        assessment_id: string;
+    };
+    query?: never;
+    url: '/api/codebases/{codebase_id}/assessments/{assessment_id}/close';
+};
+
+export type CloseAssessmentErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type CloseAssessmentError = CloseAssessmentErrors[keyof CloseAssessmentErrors];
+
+export type CloseAssessmentResponses = {
+    /**
+     * Successful Response
+     */
+    200: AssessmentResponse;
+};
+
+export type CloseAssessmentResponse = CloseAssessmentResponses[keyof CloseAssessmentResponses];
+
 export type GetAssessmentToTakeData = {
     body?: never;
     path: {
