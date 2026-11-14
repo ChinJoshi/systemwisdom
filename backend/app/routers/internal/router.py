@@ -93,11 +93,14 @@ def record_assessment_result(
             session.commit()
             raise HTTPException(status_code=422, detail="Invalid assessment result")
 
-        if result.rejection_reason is not None:
+        if result.rejected:
             # The agent found nothing to assess, e.g. an upload with no source code.
-            logger.info("Assessment %s rejected: %s", assessment_id, result.rejection_reason)
+            reason = (
+                result.rejection_reason or ""
+            ).strip() or "The upload doesn't contain source code to assess."
+            logger.info("Assessment %s rejected: %s", assessment_id, reason)
             assessment.status = AssessmentStatus.FAILED
-            assessment.error = result.rejection_reason
+            assessment.error = reason
             session.commit()
             return
 

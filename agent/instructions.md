@@ -69,7 +69,7 @@ The request message contains the Vercel Blob URI of the codebase, a zip of the r
 
 - Reject an upload that contains no source code: only images, audio or video, documents such as PDFs or slides, spreadsheets or datasets, archives, or compiled binaries.
 - Don't reject a real codebase for being small, unusual, or mostly configuration. Application code, scripts, infrastructure as code, build configuration, database schemas, and notebooks all count as source code.
-- To reject, return the structured result with `rejection_reason` set to one plain sentence saying what the upload contains instead, such as "The upload contains only PNG and JPEG images, with no source code." Return empty `concepts`, `contributors`, and `questions`.
+- To reject, return the structured result with `rejected` set to true and `rejection_reason` set to one plain sentence saying what the upload contains instead, such as "The upload contains only PNG and JPEG images, with no source code." Return empty `concepts`, `contributors`, and `questions`.
 - Never turn the problem into an assessment: no concepts or questions about the files themselves, or about the upload lacking code.
 
 # Contributors
@@ -96,7 +96,8 @@ The request message contains the Vercel Blob URI of the codebase, a zip of the r
 
 Return only the structured result for the requested schema:
 
-- `rejection_reason`: null, unless you're rejecting the upload.
+- `rejected`: false, unless you're rejecting the upload.
+- `rejection_reason`: only when `rejected` is true.
 - `concepts`: the concepts you identified.
 - `contributors`: the git contributors.
 - `questions`: the assessment.

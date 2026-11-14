@@ -150,38 +150,40 @@ class GeneratedAssessment(BaseModel):
     # First, so the model decides whether to reject before it writes an assessment. Without it the
     # schema's required concepts and questions push the model into assessing whatever it was given
     # (e.g. a zip of images), since eve fails a turn that ends without a schema-matching result.
-    rejection_reason: (
-        Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=1000)]
-        | None
-    ) = Field(
-        default=None,
+    # A required boolean, because the model filled an optional reason with "null" for real
+    # codebases; rejection_reason is only read when this is true.
+    rejected: bool = Field(
         description=(
-            "Set only when the upload has no source code to assess, such as a zip of only images, "
-            "documents, or data files. A plain-language sentence saying what the upload contains "
-            "instead. When set, return empty concepts, contributors, and questions. Omit or null "
-            "for a real codebase."
+            "true only when the upload has no source code to assess, such as a zip of only "
+            "images, documents, or data files; false for a real codebase."
+        )
+    )
+    rejection_reason: str | None = Field(
+        default=None,
+        max_length=1000,
+        description=(
+            "When rejected is true, one plain-language sentence saying what the upload contains "
+            "instead of source code. Ignored when rejected is false."
         ),
     )
     # Minimums for a real assessment are enforced in validate_assessment, not here, so that a
     # rejection can leave these empty.
     concepts: Annotated[list[GeneratedConcept], Field(max_length=10)] = Field(
         description=(
-            "The most important concepts and systems in the codebase, 1 to 10. Empty only when "
-            "rejection_reason is set."
+            "The most important concepts and systems in the codebase, 1 to 10. Empty when "
+            "rejected is true."
         )
     )
     contributors: list[GeneratedContributor] = Field(
         description="Commit authors from the git history; empty when there is no .git directory."
     )
     questions: Annotated[list[GeneratedQuestion], Field(max_length=30)] = Field(
-        description=(
-            "Multiple-choice questions, 2-3 per concept. Empty only when rejection_reason is set."
-        )
+        description="Multiple-choice questions, 2-3 per concept. Empty when rejected is true."
     )
 
     @model_validator(mode="after")
     def validate_assessment(self) -> "GeneratedAssessment":
-        if self.rejection_reason is not None:
+        if self.rejected:
             # A rejection carries no assessment; anything else the agent sent is ignored.
             return self
         if not self.concepts:
