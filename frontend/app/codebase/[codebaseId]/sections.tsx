@@ -36,14 +36,9 @@ import {
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { ActiveAssessmentActions } from "./active-assessment-actions";
 import { AssessmentRowMenu } from "./assessment-row-menu";
+import { LocalDateTime } from "./local-date-time";
 
 export const dateFormat = new Intl.DateTimeFormat("en-US", { dateStyle: "medium" });
-// Assessment creation times, in UTC so the server render is the same for every viewer.
-const utcDateTimeFormat = new Intl.DateTimeFormat("en-US", {
-  dateStyle: "medium",
-  timeStyle: "short",
-  timeZone: "UTC",
-});
 
 // Static frame of the codebase page, used by both page.tsx and loading.tsx so the fallback
 // and the real page line up exactly.
@@ -253,11 +248,7 @@ export function AssessmentsSection({
           </TableHeader>
           <TableBody>
             {assessments.map((assessment) => {
-              const created = (
-                <time dateTime={assessment.created_at}>
-                  {utcDateTimeFormat.format(new Date(assessment.created_at))} UTC
-                </time>
-              );
+              const created = <LocalDateTime iso={assessment.created_at} />;
               // Generated assessments open their results. The link's ::after stretches over the
               // whole row, so the row is clickable while keyboard users get one real link.
               const hasResults = assessment.status === "ready";
