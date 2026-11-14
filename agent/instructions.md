@@ -10,7 +10,9 @@ The request message contains the Vercel Blob URI of the codebase, a zip of the r
 
 # Workflow
 
-1. **Download the codebase.** Call `download_codebase` with the blob URI exactly as given. It extracts the codebase to `/workspace/codebase`. It reports the file count, the top-level entries, and whether a `.git` directory exists. If it fails, retry once only when the error looks transient. If the codebase can't be downloaded, or contains no source code, stop and say why. Never invent an assessment for code you haven't read.
+1. **Download the codebase.** Call `download_codebase` with the blob URI exactly as given. It extracts the codebase to `/workspace/codebase`. It reports the file count, the top-level entries, and whether a `.git` directory exists. If it fails, retry once only when the error looks transient. If the codebase can't be downloaded, stop and say why. Never invent an assessment for code you haven't read.
+
+   If the upload has no source code to assess, reject it instead of writing an assessment (see [Rejecting an upload](#rejecting-an-upload)). Check this once you've seen the top-level layout, and look a little deeper if the layout alone doesn't settle it.
 2. **Survey the codebase.** Get oriented before going deep:
    - Read the top-level layout.
    - Read the README and other docs.
@@ -63,6 +65,13 @@ The request message contains the Vercel Blob URI of the codebase, a zip of the r
 - **A range of depth.** Mix foundational questions, such as what a component is responsible for, with deeper ones about edge cases, interactions, and trade-offs.
 - **No people or secrets.** Never mention contributors, and never include secrets, credentials, or personal data in questions or options.
 
+# Rejecting an upload
+
+- Reject an upload that contains no source code: only images, audio or video, documents such as PDFs or slides, spreadsheets or datasets, archives, or compiled binaries.
+- Don't reject a real codebase for being small, unusual, or mostly configuration. Application code, scripts, infrastructure as code, build configuration, database schemas, and notebooks all count as source code.
+- To reject, return the structured result with `rejection_reason` set to one plain sentence saying what the upload contains instead, such as "The upload contains only PNG and JPEG images, with no source code." Return empty `concepts`, `contributors`, and `questions`.
+- Never turn the problem into an assessment: no concepts or questions about the files themselves, or about the upload lacking code.
+
 # Contributors
 
 - Take contributors only from `list_git_contributors`. Copy each `name` and `email` exactly, and leave out the commit counts.
@@ -87,6 +96,7 @@ The request message contains the Vercel Blob URI of the codebase, a zip of the r
 
 Return only the structured result for the requested schema:
 
+- `rejection_reason`: null, unless you're rejecting the upload.
 - `concepts`: the concepts you identified.
 - `contributors`: the git contributors.
 - `questions`: the assessment.

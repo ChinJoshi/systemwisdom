@@ -139,6 +139,7 @@ def list_assessments(
                 status=AssessmentStatus(assessment.status),
                 question_count=count,
                 created_at=assessment.created_at,
+                error=assessment.error,
             )
             for assessment, count in rows
         ]
@@ -254,6 +255,7 @@ def close_assessment(
             status=AssessmentStatus(assessment.status),
             question_count=question_count or 0,
             created_at=assessment.created_at,
+            error=assessment.error,
         )
         session.commit()
         return response
@@ -328,6 +330,7 @@ def get_assessment_results(
                 status=AssessmentStatus(assessment.status),
                 question_count=sum(question_counts.values()),
                 created_at=assessment.created_at,
+                error=assessment.error,
             ),
             concepts=concepts,
             contributors=results,

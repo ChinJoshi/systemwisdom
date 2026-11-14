@@ -15,8 +15,8 @@ export default async function Home() {
             </h1>
             <p className="max-w-xl text-base text-pretty text-muted-foreground">
                 System Wisdom breaks your codebase into core concepts and
-                measures how well each contributor understands them, so you know
-                who to ask, who to pair up, and where knowledge is thin.
+                measures how well each contributor understands them so you can
+                direct asks and bugs to the right person.
             </p>
             <Button
                 size="lg"

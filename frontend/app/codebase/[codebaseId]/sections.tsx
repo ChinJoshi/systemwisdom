@@ -33,6 +33,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { ActiveAssessmentActions } from "./active-assessment-actions";
 import { AssessmentRowMenu } from "./assessment-row-menu";
 
@@ -316,7 +317,16 @@ function AssessmentStatusBadge({ assessment }: { assessment: AssessmentResponse 
     );
   }
   if (assessment.status === "failed") {
-    return <Badge variant="destructive">Failed</Badge>;
+    if (!assessment.error) return <Badge variant="destructive">Failed</Badge>;
+    return (
+      <Tooltip>
+        {/* Focusable so keyboard users can reach the reason too. */}
+        <TooltipTrigger render={<Badge variant="destructive" tabIndex={0} />}>
+          Failed
+        </TooltipTrigger>
+        <TooltipContent>{assessment.error}</TooltipContent>
+      </Tooltip>
+    );
   }
   return (
     <Badge variant={assessment.active ? "default" : "secondary"}>

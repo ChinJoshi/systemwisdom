@@ -1,9 +1,10 @@
 import { defineConfig } from "@hey-api/openapi-ts";
 
-// Regenerate with `pnpm api:generate` while the backend is running locally
-// (`fastapi dev` serves on port 8000; the spec path is set by `openapi_url` in backend/app/main.py).
+// Regenerate with `pnpm api:generate` while the app is running locally (`vercel dev` serves on
+// port 3000 and routes /api/* to the backend; the spec path is set by `openapi_url` in
+// backend/app/main.py).
 export default defineConfig({
-  input: "http://localhost:8000/api/openapi.json",
+  input: "http://localhost:3000/api/openapi.json",
   output: "./lib/api/generated",
   plugins: [
     "@hey-api/client-fetch",
