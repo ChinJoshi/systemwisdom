@@ -32,6 +32,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { AssessmentLinkActions } from "./assessment-link-actions";
 
 export const dateFormat = new Intl.DateTimeFormat("en-US", { dateStyle: "medium" });
 
@@ -217,7 +218,10 @@ export function AssessmentsSection({
             <TableRow>
               <TableHead>Created</TableHead>
               <TableHead>Questions</TableHead>
-              <TableHead className="text-right">Status</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>
+                <span className="sr-only">Share</span>
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -229,8 +233,14 @@ export function AssessmentsSection({
                   </time>
                 </TableCell>
                 <TableCell>{assessment.question_count}</TableCell>
-                <TableCell className="text-right">
+                <TableCell>
                   <AssessmentStatusBadge assessment={assessment} />
+                </TableCell>
+                <TableCell className="text-right">
+                  {/* Only the active, ready assessment can be taken. */}
+                  {assessment.active && assessment.status === "ready" && (
+                    <AssessmentLinkActions assessmentId={assessment.id} />
+                  )}
                 </TableCell>
               </TableRow>
             ))}

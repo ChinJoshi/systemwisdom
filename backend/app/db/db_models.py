@@ -1,4 +1,5 @@
 import datetime
+import decimal
 import uuid
 from enum import StrEnum
 from typing import TypedDict
@@ -9,7 +10,7 @@ from sqlalchemy import (
     DateTime,
     ForeignKey,
     Index,
-    Integer,
+    Numeric,
     String,
     Text,
     UniqueConstraint,
@@ -123,12 +124,27 @@ class Contributor(TimestampMixin, Base):
 class ContributorUnderstanding(TimestampMixin, Base):
     __tablename__ = "contributor_understandings"
     __table_args__ = (
-        UniqueConstraint("contributor_id", "concept_id"),
+        # One score per contributor, concept, and assessment: retaking an assessment replaces its
+        # scores, while a newer assessment adds its own and leaves earlier ones as history.
+        UniqueConstraint(
+            "contributor_id",
+            "assessment_id",
+            "concept_id",
+            # Named explicitly: the default would exceed Postgres's 63-character limit.
+            name="uq_contributor_understandings_contributor_assessment_concept",
+        ),
         CheckConstraint("score BETWEEN 0 AND 100", name="ck_score_0_to_100"),
     )
 
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
     concept_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("concepts.id"), index=True)
-    # Lookups by contributor_id are served by the (contributor_id, concept_id) unique index.
+    # Lookups by contributor_id are served by the (contributor_id, assessment_id, concept_id)
+    # unique index.
     contributor_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("contributors.id"))
-    score: Mapped[int] = mapped_column(Integer)
+    # The assessment whose answers produced this score.
+    assessment_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("assessments.id"), index=True
+    )
+    # Percentage of this concept's questions in that assessment the contributor answered
+    # correctly (correct / total * 100), to two decimal places.
+    score: Mapped[decimal.Decimal] = mapped_column(Numeric(5, 2))

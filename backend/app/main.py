@@ -1,3 +1,4 @@
+from app.routers.assessment_taking.router import router as assessment_taking_router
 from app.routers.assessments.router import router as assessments_router
 from app.routers.codebase.router import router as codebase_router
 from app.routers.concepts.router import router as concepts_router
@@ -25,6 +26,7 @@ api_router.include_router(codebase_router)
 api_router.include_router(contributors_router)
 api_router.include_router(concepts_router)
 api_router.include_router(assessments_router)
+api_router.include_router(assessment_taking_router)
 api_router.include_router(internal_router)
 
 app.include_router(api_router)

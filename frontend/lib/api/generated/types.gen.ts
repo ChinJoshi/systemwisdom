@@ -5,6 +5,46 @@ export type ClientOptions = {
 };
 
 /**
+ * AssessmentContributorOption
+ */
+export type AssessmentContributorOption = {
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Email
+     */
+    email: string;
+};
+
+/**
+ * AssessmentQuestion
+ */
+export type AssessmentQuestion = {
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Concept
+     */
+    concept: string;
+    /**
+     * Question
+     */
+    question: string;
+    /**
+     * Choices
+     */
+    choices: Array<string>;
+};
+
+/**
  * AssessmentResponse
  */
 export type AssessmentResponse = {
@@ -31,6 +71,38 @@ export type AssessmentResponse = {
  * AssessmentStatus
  */
 export type AssessmentStatus = 'generating' | 'ready' | 'failed';
+
+/**
+ * AssessmentSubmission
+ */
+export type AssessmentSubmission = {
+    /**
+     * Contributor
+     */
+    contributor: ({
+        kind: 'existing';
+    } & ExistingContributorIdentity) | ({
+        kind: 'new';
+    } & NewContributorIdentity);
+    /**
+     * Answers
+     */
+    answers: Array<SubmittedAnswer>;
+};
+
+/**
+ * AssessmentSubmissionResponse
+ */
+export type AssessmentSubmissionResponse = {
+    /**
+     * Contributor Name
+     */
+    contributor_name: string;
+    /**
+     * Scores
+     */
+    scores: Array<ConceptScore>;
+};
 
 /**
  * AssessmentWebhookCompleted
@@ -103,6 +175,28 @@ export type ConceptResponse = {
 };
 
 /**
+ * ConceptScore
+ */
+export type ConceptScore = {
+    /**
+     * Concept
+     */
+    concept: string;
+    /**
+     * Correct
+     */
+    correct: number;
+    /**
+     * Total
+     */
+    total: number;
+    /**
+     * Score
+     */
+    score: number;
+};
+
+/**
  * ContributorResponse
  */
 export type ContributorResponse = {
@@ -145,6 +239,20 @@ export type CreateCodebaseRequest = {
 };
 
 /**
+ * ExistingContributorIdentity
+ */
+export type ExistingContributorIdentity = {
+    /**
+     * Kind
+     */
+    kind: 'existing';
+    /**
+     * Contributor Id
+     */
+    contributor_id: string;
+};
+
+/**
  * HTTPValidationError
  */
 export type HttpValidationError = {
@@ -152,6 +260,62 @@ export type HttpValidationError = {
      * Detail
      */
     detail?: Array<ValidationError>;
+};
+
+/**
+ * NewContributorIdentity
+ *
+ * A contributor who isn't in the codebase's list (e.g. no commits in the uploaded history).
+ */
+export type NewContributorIdentity = {
+    /**
+     * Kind
+     */
+    kind: 'new';
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Email
+     */
+    email: string;
+};
+
+/**
+ * SubmittedAnswer
+ */
+export type SubmittedAnswer = {
+    /**
+     * Question Id
+     */
+    question_id: string;
+    /**
+     * Choice Index
+     */
+    choice_index: number;
+};
+
+/**
+ * TakeAssessmentResponse
+ */
+export type TakeAssessmentResponse = {
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Codebase Name
+     */
+    codebase_name: string;
+    /**
+     * Questions
+     */
+    questions: Array<AssessmentQuestion>;
+    /**
+     * Contributors
+     */
+    contributors: Array<AssessmentContributorOption>;
 };
 
 /**
@@ -355,6 +519,66 @@ export type CreateAssessmentResponses = {
 };
 
 export type CreateAssessmentResponse = CreateAssessmentResponses[keyof CreateAssessmentResponses];
+
+export type GetAssessmentToTakeData = {
+    body?: never;
+    path: {
+        /**
+         * Assessment Id
+         */
+        assessment_id: string;
+    };
+    query?: never;
+    url: '/api/assessments/{assessment_id}';
+};
+
+export type GetAssessmentToTakeErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetAssessmentToTakeError = GetAssessmentToTakeErrors[keyof GetAssessmentToTakeErrors];
+
+export type GetAssessmentToTakeResponses = {
+    /**
+     * Successful Response
+     */
+    200: TakeAssessmentResponse;
+};
+
+export type GetAssessmentToTakeResponse = GetAssessmentToTakeResponses[keyof GetAssessmentToTakeResponses];
+
+export type SubmitAssessmentData = {
+    body: AssessmentSubmission;
+    path: {
+        /**
+         * Assessment Id
+         */
+        assessment_id: string;
+    };
+    query?: never;
+    url: '/api/assessments/{assessment_id}/submissions';
+};
+
+export type SubmitAssessmentErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type SubmitAssessmentError = SubmitAssessmentErrors[keyof SubmitAssessmentErrors];
+
+export type SubmitAssessmentResponses = {
+    /**
+     * Successful Response
+     */
+    201: AssessmentSubmissionResponse;
+};
+
+export type SubmitAssessmentResponse = SubmitAssessmentResponses[keyof SubmitAssessmentResponses];
 
 export type CreateCodebaseData = {
     body: CreateCodebaseRequest;

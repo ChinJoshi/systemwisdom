@@ -3,7 +3,14 @@ from datetime import datetime
 from typing import Annotated, Any, List, Literal, Optional
 
 from app.db.db_models import AssessmentStatus
-from pydantic import BaseModel, ConfigDict, Field, StringConstraints, model_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    EmailStr,
+    Field,
+    StringConstraints,
+    model_validator,
+)
 
 
 class ActClaim(BaseModel):
@@ -176,3 +183,73 @@ class AssessmentWebhookFailed(BaseModel):
 AssessmentWebhook = Annotated[
     AssessmentWebhookCompleted | AssessmentWebhookFailed, Field(discriminator="status")
 ]
+
+
+# --- Taking an assessment ----------------------------------------------------------------------
+# Public: anyone with an assessment's link can take it, so these models never expose correct
+# answers or anything about the codebase beyond its name.
+
+
+class AssessmentQuestion(BaseModel):
+    id: uuid.UUID
+    concept: str
+    question: str
+    choices: list[str]
+
+
+class AssessmentContributorOption(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    name: str
+    email: str
+
+
+class TakeAssessmentResponse(BaseModel):
+    id: uuid.UUID
+    codebase_name: str
+    questions: list[AssessmentQuestion]
+    # The codebase's known contributors, for the "who are you?" dropdown.
+    contributors: list[AssessmentContributorOption]
+
+
+class ExistingContributorIdentity(BaseModel):
+    kind: Literal["existing"]
+    contributor_id: uuid.UUID
+
+
+class NewContributorIdentity(BaseModel):
+    """A contributor who isn't in the codebase's list (e.g. no commits in the uploaded history)."""
+
+    kind: Literal["new"]
+    name: Annotated[
+        str, StringConstraints(strip_whitespace=True, min_length=1, max_length=255)
+    ]
+    email: Annotated[EmailStr, StringConstraints(to_lower=True, max_length=320)]
+
+
+class SubmittedAnswer(BaseModel):
+    question_id: uuid.UUID
+    choice_index: Annotated[int, Field(ge=0, le=3)]
+
+
+class AssessmentSubmission(BaseModel):
+    contributor: Annotated[
+        ExistingContributorIdentity | NewContributorIdentity, Field(discriminator="kind")
+    ]
+    # One answer per question in the assessment.
+    answers: Annotated[list[SubmittedAnswer], Field(min_length=1)]
+
+
+class ConceptScore(BaseModel):
+    concept: str
+    correct: int
+    total: int
+    # correct / total * 100, rounded to two decimal places.
+    score: float
+
+
+class AssessmentSubmissionResponse(BaseModel):
+    contributor_name: str
+    scores: list[ConceptScore]
+
