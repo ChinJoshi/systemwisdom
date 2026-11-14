@@ -35,6 +35,12 @@ import {
 import { ActiveAssessmentActions } from "./active-assessment-actions";
 
 export const dateFormat = new Intl.DateTimeFormat("en-US", { dateStyle: "medium" });
+// Assessment creation times, in UTC so the server render is the same for every viewer.
+const utcDateTimeFormat = new Intl.DateTimeFormat("en-US", {
+  dateStyle: "medium",
+  timeStyle: "short",
+  timeZone: "UTC",
+});
 
 // Static frame of the codebase page, used by both page.tsx and loading.tsx so the fallback
 // and the real page line up exactly.
@@ -230,7 +236,7 @@ export function AssessmentsSection({
             {assessments.map((assessment) => {
               const created = (
                 <time dateTime={assessment.created_at}>
-                  {dateFormat.format(new Date(assessment.created_at))}
+                  {utcDateTimeFormat.format(new Date(assessment.created_at))} UTC
                 </time>
               );
               // Generated assessments open their results. The link's ::after stretches over the
