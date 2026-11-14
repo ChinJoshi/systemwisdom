@@ -4,6 +4,8 @@ System wisdom is a tool to make it more clear who understands what parts of a sy
 
 At a high level, the major components are a Next frontend, a FastAPI backend, and an Eve agent. It uses the agent to analyze your codebase, determine what the major parts or concepts of it are, and then uses those concepts to create an assessment for each of those individual concepts. Once your codebase has been analyzed and an assessment created, the assessment can be administered via a shareable link to your fellow contributors or peers. The results of the assessments are accessible to you via the dashboard so you can use that information to intelligently direct questions, bugs, or feature requests to the most likely person to be fluent in that particular subdomain.
 
+![System Wisdom architecture diagram](diagram.png)
+
 
 ## Problem
 
