@@ -68,6 +68,21 @@ export type AssessmentResponse = {
 };
 
 /**
+ * AssessmentResults
+ */
+export type AssessmentResults = {
+    assessment: AssessmentResponse;
+    /**
+     * Concepts
+     */
+    concepts: Array<string>;
+    /**
+     * Contributors
+     */
+    contributors: Array<ContributorResults>;
+};
+
+/**
  * AssessmentStatus
  */
 export type AssessmentStatus = 'generating' | 'ready' | 'failed';
@@ -197,6 +212,20 @@ export type ConceptScore = {
 };
 
 /**
+ * ContributorConceptScore
+ */
+export type ContributorConceptScore = {
+    /**
+     * Concept
+     */
+    concept: string;
+    /**
+     * Score
+     */
+    score: number;
+};
+
+/**
  * ContributorResponse
  */
 export type ContributorResponse = {
@@ -212,6 +241,32 @@ export type ContributorResponse = {
      * Email
      */
     email: string;
+};
+
+/**
+ * ContributorResults
+ */
+export type ContributorResults = {
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Email
+     */
+    email: string;
+    /**
+     * Average Score
+     */
+    average_score: number;
+    /**
+     * Scores
+     */
+    scores: Array<ContributorConceptScore>;
 };
 
 /**
@@ -553,6 +608,40 @@ export type CloseAssessmentResponses = {
 };
 
 export type CloseAssessmentResponse = CloseAssessmentResponses[keyof CloseAssessmentResponses];
+
+export type GetAssessmentResultsData = {
+    body?: never;
+    path: {
+        /**
+         * Codebase Id
+         */
+        codebase_id: string;
+        /**
+         * Assessment Id
+         */
+        assessment_id: string;
+    };
+    query?: never;
+    url: '/api/codebases/{codebase_id}/assessments/{assessment_id}/results';
+};
+
+export type GetAssessmentResultsErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetAssessmentResultsError = GetAssessmentResultsErrors[keyof GetAssessmentResultsErrors];
+
+export type GetAssessmentResultsResponses = {
+    /**
+     * Successful Response
+     */
+    200: AssessmentResults;
+};
+
+export type GetAssessmentResultsResponse = GetAssessmentResultsResponses[keyof GetAssessmentResultsResponses];
 
 export type GetAssessmentToTakeData = {
     body?: never;

@@ -17,9 +17,9 @@ import {
   ConceptsSection,
   ContributorsSection,
   dateFormat,
-} from "./sections";
-import { CreateAssessmentButton } from "./create-assessment-button";
-import { RefreshWhileGenerating } from "./refresh-while-generating";
+} from "../sections";
+import { CreateAssessmentButton } from "../create-assessment-button";
+import { RefreshWhileGenerating } from "../refresh-while-generating";
 
 // Shared by generateMetadata and the page, so a render fetches the codebase once.
 const loadCodebase = cache(async (codebaseId: string) => {

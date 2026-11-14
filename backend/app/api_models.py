@@ -253,3 +253,30 @@ class AssessmentSubmissionResponse(BaseModel):
     contributor_name: str
     scores: list[ConceptScore]
 
+
+
+# --- Assessment results ------------------------------------------------------------------------
+
+
+class ContributorConceptScore(BaseModel):
+    concept: str
+    # 0-100: the share of this concept's questions the contributor answered correctly.
+    score: float
+
+
+class ContributorResults(BaseModel):
+    id: uuid.UUID
+    name: str
+    email: str
+    # Mean of the per-concept scores.
+    average_score: float
+    # One entry per concept in the assessment, in the same order as `AssessmentResults.concepts`.
+    scores: list[ContributorConceptScore]
+
+
+class AssessmentResults(BaseModel):
+    assessment: AssessmentResponse
+    # The concepts the assessment covers, alphabetically.
+    concepts: list[str]
+    # Contributors who have taken this assessment, alphabetically.
+    contributors: list[ContributorResults]

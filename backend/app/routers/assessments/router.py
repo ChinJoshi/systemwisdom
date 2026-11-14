@@ -4,10 +4,24 @@ import uuid
 from typing import Annotated, Any
 
 import httpx
-from app.api_models import AssessmentResponse, AuthenticatedUser, GeneratedAssessment
+from app.api_models import (
+    AssessmentResponse,
+    AssessmentResults,
+    AuthenticatedUser,
+    ContributorConceptScore,
+    ContributorResults,
+    GeneratedAssessment,
+)
 from app.config import settings
 from app.db.db import Session
-from app.db.db_models import Assessment, AssessmentStatus, Question
+from app.db.db_models import (
+    Assessment,
+    AssessmentStatus,
+    Concept,
+    Contributor,
+    ContributorUnderstanding,
+    Question,
+)
 from app.routers.codebase.helpers import get_owned_codebase
 from app.security import authenticated_user
 from fastapi import APIRouter, Depends, HTTPException, Request
@@ -242,3 +256,79 @@ def close_assessment(
         )
         session.commit()
         return response
+
+
+# Each contributor who has taken the assessment, with their score per concept. A contributor's
+# scores always cover every concept in the assessment, since a submission answers every question.
+@router.get("/{assessment_id}/results")
+def get_assessment_results(
+    codebase_id: uuid.UUID,
+    assessment_id: uuid.UUID,
+    user: Annotated[AuthenticatedUser, Depends(authenticated_user)],
+) -> AssessmentResults:
+    with Session() as session:
+        get_owned_codebase(session, codebase_id, user.user_id)
+        assessment = session.scalar(
+            select(Assessment).where(
+                Assessment.id == assessment_id, Assessment.codebase_id == codebase_id
+            )
+        )
+        if assessment is None:
+            raise HTTPException(status_code=404, detail="Assessment not found")
+
+        question_counts = {
+            concept_name: count
+            for concept_name, count in session.execute(
+                select(Concept.name, func.count(Question.id))
+                .join(Question, Question.concept_id == Concept.id)
+                .where(Question.assessment_id == assessment_id)
+                .group_by(Concept.name)
+            )
+        }
+        concepts = sorted(question_counts)
+
+        scores_by_contributor: dict[uuid.UUID, dict[str, float]] = {}
+        contributors: dict[uuid.UUID, Contributor] = {}
+        for contributor, concept_name, score in session.execute(
+            select(Contributor, Concept.name, ContributorUnderstanding.score)
+            .join(Contributor, Contributor.id == ContributorUnderstanding.contributor_id)
+            .join(Concept, Concept.id == ContributorUnderstanding.concept_id)
+            .where(ContributorUnderstanding.assessment_id == assessment_id)
+        ):
+            contributors[contributor.id] = contributor
+            scores_by_contributor.setdefault(contributor.id, {})[concept_name] = float(score)
+
+        results = []
+        for contributor_id, scores in scores_by_contributor.items():
+            contributor = contributors[contributor_id]
+            ordered = [
+                ContributorConceptScore(concept=name, score=scores.get(name, 0.0))
+                for name in concepts
+            ]
+            results.append(
+                ContributorResults(
+                    id=contributor.id,
+                    name=contributor.name,
+                    email=contributor.email,
+                    average_score=round(
+                        sum(s.score for s in ordered) / len(ordered), 2
+                    )
+                    if ordered
+                    else 0.0,
+                    scores=ordered,
+                )
+            )
+        results.sort(key=lambda r: (r.name.casefold(), r.email))
+
+        return AssessmentResults(
+            assessment=AssessmentResponse(
+                id=assessment.id,
+                active=assessment.active,
+                status=AssessmentStatus(assessment.status),
+                question_count=sum(question_counts.values()),
+                created_at=assessment.created_at,
+            ),
+            concepts=concepts,
+            contributors=results,
+        )
+

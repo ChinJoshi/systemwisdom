@@ -227,25 +227,48 @@ export function AssessmentsSection({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {assessments.map((assessment) => (
-              <TableRow key={assessment.id}>
-                <TableCell className="font-medium">
-                  <time dateTime={assessment.created_at}>
-                    {dateFormat.format(new Date(assessment.created_at))}
-                  </time>
-                </TableCell>
-                <TableCell>{assessment.question_count}</TableCell>
-                <TableCell>
-                  <AssessmentStatusBadge assessment={assessment} />
-                </TableCell>
-                <TableCell className="text-right">
-                  {/* Only the active, ready assessment can be taken. */}
-                  {assessment.active && assessment.status === "ready" && (
-                    <ActiveAssessmentActions codebaseId={codebaseId} assessmentId={assessment.id} />
-                  )}
-                </TableCell>
-              </TableRow>
-            ))}
+            {assessments.map((assessment) => {
+              const created = (
+                <time dateTime={assessment.created_at}>
+                  {dateFormat.format(new Date(assessment.created_at))}
+                </time>
+              );
+              // Generated assessments open their results. The link's ::after stretches over the
+              // whole row, so the row is clickable while keyboard users get one real link.
+              const hasResults = assessment.status === "ready";
+              return (
+                <TableRow key={assessment.id} className={hasResults ? "relative" : undefined}>
+                  <TableCell className="font-medium">
+                    {hasResults ? (
+                      <Link
+                        href={`/codebase/${codebaseId}/assessments/${assessment.id}`}
+                        className="outline-none after:absolute after:inset-0 after:content-[''] focus-visible:after:ring-1 focus-visible:after:ring-ring"
+                      >
+                        <span className="sr-only">View results of the assessment created </span>
+                        {created}
+                      </Link>
+                    ) : (
+                      created
+                    )}
+                  </TableCell>
+                  <TableCell>{assessment.question_count}</TableCell>
+                  <TableCell>
+                    <AssessmentStatusBadge assessment={assessment} />
+                  </TableCell>
+                  <TableCell className="text-right">
+                    {/* Only the active, ready assessment can be taken. Sits above the row link. */}
+                    {assessment.active && assessment.status === "ready" && (
+                      <div className="relative z-10">
+                        <ActiveAssessmentActions
+                          codebaseId={codebaseId}
+                          assessmentId={assessment.id}
+                        />
+                      </div>
+                    )}
+                  </TableCell>
+                </TableRow>
+              );
+            })}
           </TableBody>
         </Table>
       )}

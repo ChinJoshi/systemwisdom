@@ -1,5 +1,5 @@
 import { Skeleton } from "@/components/ui/skeleton";
-import { CodebaseSectionsSkeleton, CodebaseShell } from "./sections";
+import { CodebaseSectionsSkeleton, CodebaseShell } from "../sections";
 
 // Shown immediately when navigating to a codebase while the page fetches its data.
 export default function CodebaseLoading() {
